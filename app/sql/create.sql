@@ -1,3 +1,9 @@
+/*
+status: 
+0 - normal account
+1 - not accepted
+2 - password reset
+*/
 CREATE TABLE users
 (
     id 		serial 		NOT NULL PRIMARY KEY,
@@ -9,7 +15,6 @@ CREATE TABLE users
     admin       smallint        NOT NULL DEFAULT 0,
     status      smallint        NOT NULL DEFAULT 0
 );
-
 
 CREATE TABLE role
 (
