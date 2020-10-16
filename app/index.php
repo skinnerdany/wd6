@@ -11,6 +11,7 @@ include BASEPATH . '..' . DS .'framework' . DS . 'core.php';
 
 core::app()->start($config);
 
+// ....
 // edit_catalog - Разрешить редактирование каталога товаров
 /*
 if (check_access('edit_catalog')) {

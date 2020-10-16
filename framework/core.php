@@ -5,21 +5,23 @@ $includes .=
         PATH_SEPARATOR . __DIR__ . DS . 'classes' . 
         PATH_SEPARATOR . __DIR__ . DS . 'classes' . DS . 'databases' . 
         PATH_SEPARATOR . __DIR__ . DS . 'traits' . 
-        PATH_SEPARATOR . __DIR__ . DS . 'interfaces';
+        PATH_SEPARATOR . __DIR__ . DS . 'interfaces' .
+        PATH_SEPARATOR . BASEPATH . 'components';
 set_include_path($includes);
 
 spl_autoload_register(function ($className) {
     include $className . '.php';
 });
 
-session_start();
 
-$a = core::app();
-$b = core::app();
+
 class core
 {
+    
     private static $app = false;
     private $config = [];
+    private $componentsList = [];
+    private $componentsCache = [];
 
     private function __construct() {}
     private function __clone() {}
@@ -27,7 +29,15 @@ class core
 
     public function __get($name)
     {
-        return $this->config[$name] ?? null;
+        if (isset($this->config['components'][$name])) {
+            if (!isset($this->componentsCache[$name])) {
+                $this->componentsCache[$name] = 
+                    new $this->config['components'][$name]['className'](
+                        $this->config['components'][$name]['constructParams']
+                    );
+            }
+        }
+        return $this->componentsCache[$name] ?? $this->config[$name] ?? null;
     }
 
     public static function app()
@@ -57,6 +67,9 @@ class core
         $controllerName = $controller . 'Ctr';
         if (!@include BASEPATH . 'controllers' . DS . $controllerName . '.php') {
             throw new httpException('Controller ' . $controller . ' file not exists', 404);
+        }
+        if (!class_exists($controllerName)) {
+            throw new httpException('Class ' . $controller . ' not exists', 404);
         }
         $controller = new $controllerName;
 

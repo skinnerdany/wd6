@@ -4,6 +4,4 @@
     confirm Passw: <input type="password" name="cpassword"  value="<?php echo ($cpassword ?? ''); ?>" /><br />
     <input type="submit" name="submit">
 </form>
-<div style="background: #f99;">
-    <?php echo $error ?? ''; ?>
-</div>
+<?php echo $this->showTemplate('formError', ['error' => $error ?? '']); ?>

@@ -8,4 +8,6 @@ define('BASEPATH', realpath(__DIR__ . DS . '..') . DS);
 
 return [
     'db' => include 'pgsql.php',
+    'user' => [],
+    'components' => include 'components.php'
 ];
