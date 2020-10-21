@@ -42,11 +42,55 @@ class users
     {
         return $_SESSION['admin'] || (isset($_SESSION['privileges']) && in_array($privilegeCode, $_SESSION['privileges']));
     }
+    
+    public function change($data)
+    {
+        if (empty(trim($data['password'] ?? ''))) {
+            throw new Exception('Password is empty');
+        }
+        if (empty(trim($data['cpassword'] ?? ''))) {
+            throw new Exception('Password confirmation is empty');
+        }
+
+        if ($data['password'] != $data['cpassword']) {
+            throw new Exception('Password confirmation failed');
+        }
+        
+        if (empty($data['token'])) {
+            throw new Exception('Invalid change password link');
+        }
+
+        $user = $this->db->select('users', ['token' => $data['token']]);
+        if (empty($user)) {
+            throw new Exception('Invalid change password link');
+        }
+        $salt = $this->getToken();
+        $password = $this->getPasswordHash($data['password'], $salt);
+        $this->db->update(
+            'users', 
+            ['status' => 0, 'token' => '', 'password' => $password, 'salt' => $salt], 
+            ['id' => $user[0]['id']]
+        );
+    }
+    
+    public function reset($data)
+    {
+        if (empty(trim($data['email'] ?? ''))) {
+            throw new Exception('Email is empty');
+        }
+        $check = $this->db->select('users', ['email' => $data['email']]);
+        if (empty($check)) {
+            throw new Exception('Undefined email');
+        }
+        $_SESSION = [];
+        setcookie('token', '', time() - 3, '', '', false, true);
+        $this->db->update('users', ['status' => 2, 'token' => $this->getUniqueToken()], ['id' => $check[0]['id']]);
+    }
 
     public function logout()
     {
         setcookie('token', '', time()-3, '', '', false, true);
-        $this->db->update('users', ['token' => ''], ['id' => $_SESSION['id']]);
+        $this->db->update('users', ['token' => ''], ['id' => $_SESSION['id'] ?? -1]);
         $_SESSION = [];
     }
     
@@ -71,6 +115,9 @@ class users
 
         switch ($checkedUser['status']) {
             case 1:
+                if ($user['token'] != $checkedUser['token']) {
+                    throw new Exception('Invalid confirmation link');
+                }
                 $checkedUser['status'] = 0;
                 break;
             case 2:
@@ -81,15 +128,20 @@ class users
         $this->authorization($checkedUser);
     }
     
+    private function getUniqueToken()
+    {
+        do {
+            $token = $this->getToken();
+        } while (!empty($this->db->select('users', ['token' => $token])));
+    }
+
     protected function authorization($user)
     {
         unset($user['password'], $user['salt'], $user['token']);
 
-        do {
-            $token = $this->getToken();
-        } while (!empty($this->db->select('users', ['token' => $token])));
+        $token = $this->getUniqueToken();
         
-        setcookie('token', $token, 366 * 86400, '/', '', false, true);
+        setcookie('token', $token, time() + 366 * 86400, '', '', false, true);
         $this->db->update('users', ['token' => $token, 'status' => 0], ['id' => $user['id']]);
         $user['privileges'] = $this->getUserPrivileges($user['role_id']);
         $_SESSION = $user;
@@ -138,7 +190,7 @@ class users
         unset($user['cpassword']);
         $user['salt'] = $this->getToken();
         $user['password'] = $this->getPasswordHash($user['password'], $user['salt']);
-        $user['token'] = $this->getToken();
+        $user['token'] = $this->getUniqueToken();
         $user['status'] = 1;
         return (int) $this->db->insert('users', $user, 'id');
     }

@@ -5,3 +5,6 @@
     <input type="submit" name="submit">
 </form>
 <?php echo $this->showTemplate('formError', ['error' => $error ?? '']); ?>
+$pageSize = 50;
+$page = n;
+select * from table limit 50 offset 10
