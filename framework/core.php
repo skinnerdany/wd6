@@ -52,6 +52,13 @@ class core
     {
         $this->config = $config;
         try {
+            if (MODE == 'rest') {
+                request::getInstance()->controller = !empty(request::getInstance()->controller) ?
+                    request::getInstance()->controller :
+                    request::getInstance()->action;
+                request::getInstance()->action = $this->getRestAction();
+            }
+
             $this->runAction(request::getInstance()->controller, request::getInstance()->action);
         } catch (httpException $e) {
             $e->sendHttpStatus();
@@ -59,6 +66,23 @@ class core
         } catch (Exception $e) {
             echo "EXCEPTION: " . $e->getMessage();
             die();
+        }
+    }
+    
+    private function getRestAction()
+    {
+        switch (strtolower($_SERVER['REQUEST_METHOD'])) {
+            case 'get':
+                return 
+                    isset(request::getInstance()->get['id']) && !empty(request::getInstance()->get['id']) ?
+                        'view' :
+                        'get';
+            case 'post':
+                return 'create';
+            case 'put':
+                return 'update';
+            case 'delete':
+                return 'delete';
         }
     }
 

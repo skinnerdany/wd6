@@ -17,7 +17,7 @@ class pgsql implements iDataBase
     public function querySelect($sql)
     {
         $res = pg_query($this->connection, $sql);
-        return pg_fetch_all($res);
+        return pg_fetch_all($res) ?: [];
     }
     
     public function insert($table, $data, $return = false)
