@@ -4,6 +4,7 @@ class mainCtr extends controller
 {
     public function indexAct()
     {
+	//die('aaa');
         $this->getModel('test')->start();
 
         $item = $this->showTemplate('item', ['tplData' => 'AAA']);

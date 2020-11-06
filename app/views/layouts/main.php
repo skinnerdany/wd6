@@ -20,6 +20,9 @@
         </style>
     </head>
     <body>
+        <div style="position: absolute; max-width: 200px; max-height: 100px; background: #fcc;right: 10px; top: 10px;padding: 10px;">
+            <?php echo $__errors ?? ''; ?>
+        </div>
         <div id="menu">
             <?php echo $__menu; ?>
         </div>
